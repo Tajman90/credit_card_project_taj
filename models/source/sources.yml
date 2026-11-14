@@ -1,0 +1,12 @@
+version: 2
+
+sources:
+  - name: source
+    catalog: card_project
+    schema: bronze
+    tables:
+      - name: cards
+      - name: transactions
+      - name: users
+      - name: mcc_codes
+      - name: train_fraud_labels

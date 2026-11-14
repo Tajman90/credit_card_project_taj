@@ -1,0 +1,50 @@
+version: 2
+
+models:
+  - name: silver_users
+    columns:
+      - name: user_id
+        tests: [unique, not_null]
+
+  - name: silver_cards
+    columns:
+      - name: card_id
+        tests: [unique, not_null]
+      - name: user_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('silver_users')
+                field: user_id
+
+  - name: silver_transactions
+    columns:
+      - name: transaction_id
+        tests: [unique, not_null]
+      - name: transaction_ts
+        tests: [not_null]
+      - name: amount
+        tests: [not_null]
+      - name: card_id
+        tests:
+          - relationships:
+              arguments:
+                to: ref('silver_cards')
+                field: card_id
+
+  - name: silver_fraud_labels
+    columns:
+      - name: transaction_id
+        tests:
+          - unique
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('silver_transactions')
+                field: transaction_id
+
+  - name: silver_mcc_codes
+    columns:
+      - name: mcc
+        tests: [unique, not_null]

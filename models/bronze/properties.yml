@@ -1,0 +1,15 @@
+version: 2
+
+models:
+  - name: stg_jaffle_shop__customers #  Must match the filename of a model -- including case sensitivity.
+    config:
+      tags: ['pii']
+    columns:
+      - name: customer_id
+        data_tests:
+          - unique
+          - not_null
+
+  - name: stg_jaffle_shop__orders
+    config:
+      materialized: view

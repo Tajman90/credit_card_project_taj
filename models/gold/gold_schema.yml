@@ -1,0 +1,71 @@
+version: 2
+
+models:
+  - name: dim_card_profile_scd2
+    columns:
+      - name: card_profile_key
+        tests: [unique, not_null]
+      - name: card_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('silver_cards')
+                field: card_id
+      - name: valid_from
+        tests: [not_null]
+      - name: valid_to
+        tests: [not_null]
+      - name: card_status
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['active', 'dormant', 'expired']
+
+  - name: gold_transactions_enriched
+    columns:
+      - name: transaction_id
+        tests: [unique, not_null]
+      - name: card_profile_version
+        tests: [not_null]
+      - name: mcc_description
+        tests:
+          - not_null:
+              config:
+                severity: warn
+
+  - name: gold_fraud_features
+    columns:
+      - name: transaction_id
+        tests: [unique, not_null]
+      - name: dataset_split
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['train', 'test', 'unlabeled']
+
+  - name: gold_recon_refund_matches
+    columns:
+      - name: transaction_id
+        tests: [unique, not_null]
+      - name: match_status
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['exact_match', 'partial_or_different_amount', 'no_prior_purchase']
+
+  - name: gold_recon_exceptions
+    columns:
+      - name: transaction_id
+        tests: [not_null]
+      - name: severity
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['high', 'medium', 'low']
+
+  - name: gold_recon_card_month_statement
+    columns:
+      - name: card_id
+        tests: [not_null]
+
