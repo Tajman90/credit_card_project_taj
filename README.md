@@ -60,6 +60,23 @@ The fraud pattern changed over time, and rules built from all labeled data faile
 - **A card's recent new-merchant count is a strong signal.** In 2018 chip transactions at known merchants, the fraud rate rose from 0.019% (no new merchants in the prior 7 days) to 0.977% (3 or more). It is kept as a model feature (`new_merchants_prior_7d`, `new_merchants_prior_30d`).
 - **The error-history risk tier is a weak predictor**, and it was not tuned against the labels, to avoid leaking them.
 
+## Fraud model
+
+A gradient-boosted classifier (scikit-learn `HistGradientBoostingClassifier`) sits beside the rule baseline. Notebook: `notebooks/fraud_model_notebook.py`. It uses the same time-based protocol as the rules: train through 2017, tune on 2018, refit through 2018 and score 2019 once. Training keeps every fraud row and 10% of legitimate rows; every evaluation uses all labeled rows of the test year. The model is compared with rule r6 at the same flag rate (3.3% of transactions), so the review workload is identical.
+
+| 2019 test | Frauds caught | Precision | Recall |
+|---|---|---|---|
+| Rule r6 | 819 | 3.15% | 60.2% |
+| Model | 1,160 | 4.46% | 85.3% |
+
+The model catches 341 more frauds for the same number of flagged transactions (PR-AUC 0.354 against a base rate of about 0.17%).
+
+**Drift.** Training only on earlier years, the model beats r6 in 2016 (6.79% against 0.50% precision) and 2018 (3.88% against 2.99%), but ties it in 2017 (0.36% against 0.35%), the year fraud moved from online to chip. A model learns a new fraud type only after it appears in training data, which is the case for regular retraining.
+
+**What drives it.** Merchant category and transaction type matter most, followed by merchant familiarity (days since first visit, new merchants in the prior 7 days) and hour of day. Error history and the risk tier contribute little. The three hyperparameter settings tried gave nearly identical results (PR-AUC 0.193 to 0.204), so the outcome does not depend on tuning.
+
+**Caveats.** Precision is still low in absolute terms (about 95% of flagged transactions are legitimate), as expected for 0.17% fraud. Importance scores are approximate because several features are correlated. The 2019 fraud mix was seen when rule r6 was designed, which slightly favours the rule; the model's settings were chosen on 2018 only.
+
 ## Reconciliation
 
 The dataset has no second source (such as a bank settlement file) to compare against, so reconciliation means internal controls and exception checks.
@@ -112,7 +129,7 @@ A full `dbt build` runs 63 nodes (models and tests): unique, not-null, relations
 ## Limitations and next steps
 
 - Reconciliation is internal only. With a settlement or statement file, the exceptions would turn into true matched/unmatched breaks.
-- A trained model (train through 2017, tune on 2018, score 2019 once) would sit beside the rule baseline.
+- Fraud model: add regular retraining and monitoring for drift, and test hour of day as a new rule.
 - The SQL uses Spark/Databricks functions (`stack`, `try_to_date`, `<=>`, `sequence`), so moving to another engine means rewriting parts of it. Moving to Databricks on AWS mainly means moving the raw files to S3 and changing catalog and warehouse settings, which are kept in dbt variables and sources.
 
 ## Repository layout
