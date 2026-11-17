@@ -2,7 +2,7 @@
 
 A medallion-architecture (bronze, silver, gold) pipeline built with dbt on Databricks. It cleans 13.3M credit card transactions, tracks card history with a Type 2 slowly changing dimension, measures rule-based fraud detection with time-based evaluation, and runs internal reconciliation checks.
 
- ![dbt lineage graph](docs/images/lineage_fraud_features.jpg) 
+ ![dbt lineage graph](docs/lineage_fraud_features.jpg)
 
 ## Data
 
